@@ -1,12 +1,15 @@
 """Helpers to check recorder."""
 
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.hass_dict import HassKey
 
-DOMAIN = "recorder"
+DOMAIN: HassKey[RecorderData] = HassKey("recorder")
 
 
 @dataclass(slots=True)
@@ -14,7 +17,7 @@ class RecorderData:
     """Recorder data stored in hass.data."""
 
     recorder_platforms: dict[str, Any] = field(default_factory=dict)
-    db_connected: asyncio.Future = field(default_factory=asyncio.Future)
+    db_connected: asyncio.Future[bool] = field(default_factory=asyncio.Future)
 
 
 def async_migration_in_progress(hass: HomeAssistant) -> bool:
@@ -30,7 +33,11 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
 @callback
 def async_initialize_recorder(hass: HomeAssistant) -> None:
     """Initialize recorder data."""
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.recorder.basic_websocket_api import async_setup
+
     hass.data[DOMAIN] = RecorderData()
+    async_setup(hass)
 
 
 async def async_wait_recorder(hass: HomeAssistant) -> bool:
@@ -40,5 +47,4 @@ async def async_wait_recorder(hass: HomeAssistant) -> bool:
     """
     if DOMAIN not in hass.data:
         return False
-    db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
-    return await db_connected
+    return await hass.data[DOMAIN].db_connected
