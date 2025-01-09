@@ -158,7 +158,7 @@ async def async_setup_component(
     setup_done_futures = hass.data.setdefault(DATA_SETUP_DONE, {})
 
     if existing_setup_future := setup_futures.get(domain):
-        return await existing_setup_future
+        return existing_setup_future
 
     setup_future = hass.loop.create_future()
     setup_futures[domain] = setup_future
